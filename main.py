@@ -518,10 +518,10 @@ def main():
     print(" "*20 + "ANÁLISIS EXPLORATORIO DE DATOS - PROYECTO OLIST")
     print("="*80 + "\n")
     
-    # Create images directory
-    image_dir = 'images'
-    os.makedirs(image_dir, exist_ok=True)
-    print(f"✓ Directorio '{image_dir}' creado o ya existente.")
+    # Create results directory
+    results_dir = 'results'
+    os.makedirs(results_dir, exist_ok=True)
+    print(f"✓ Directorio '{results_dir}' creado o ya existente.")
 
     # 1. Cargar datasets
     dataframes = load_datasets()
