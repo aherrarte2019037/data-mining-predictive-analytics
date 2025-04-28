@@ -547,16 +547,16 @@ def main():
                 print(f"  - order_reviews.{col} convertida a datetime.")
     
     # 2. Evaluación de calidad de datos
-    quality_report = evaluate_data_quality(dataframes, image_dir)
+    quality_report = evaluate_data_quality(dataframes, results_dir)
     
     # 3. Resúmenes estadísticos
-    generate_statistical_summaries(dataframes, image_dir)
+    generate_statistical_summaries(dataframes, results_dir)
     
     # 4. Visualización de patrones clave
-    visualize_key_patterns(dataframes, image_dir)
+    visualize_key_patterns(dataframes, results_dir)
     
     # 5. Análisis de correlación
-    analyze_correlations(dataframes, image_dir)
+    analyze_correlations(dataframes, results_dir)
     
     print("\n" + "="*80)
     print(" "*25 + "ANÁLISIS EXPLORATORIO COMPLETADO")
