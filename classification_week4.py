@@ -40,7 +40,6 @@ def prepare_classification_df(df, threshold=4):
 def build_preprocessor(X):
     num_feats = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
     cat_feats = X.select_dtypes(include=['object', 'category']).columns.tolist()
-
     num_pipeline = Pipeline([
         ('imputer', SimpleImputer(strategy='median')),
         ('scaler', StandardScaler())
@@ -49,7 +48,6 @@ def build_preprocessor(X):
         ('imputer', SimpleImputer(strategy='most_frequent')),
         ('onehot', OneHotEncoder(handle_unknown='ignore'))
     ])
-
     return ColumnTransformer([
         ('num', num_pipeline, num_feats),
         ('cat', cat_pipeline, cat_feats)
@@ -74,8 +72,21 @@ def evaluate_baseline(X_train, X_test, y_train, y_test, preprocessor):
         y_pred = pipe.predict(X_test)
         y_proba = pipe.predict_proba(X_test)[:, 1]
 
+        acc = accuracy_score(y_test, y_pred)
+        prec = precision_score(y_test, y_pred)
+        rec = recall_score(y_test, y_pred)
         f1 = f1_score(y_test, y_pred)
-        metrics.append({'model': name, 'f1': f1})
+        roc = roc_auc_score(y_test, y_proba)
+        print(f"> Accuracy: {acc:.4f}, Precision: {prec:.4f}, Recall: {rec:.4f}, F1: {f1:.4f}, ROC AUC: {roc:.4f}")
+
+        metrics.append({
+            'model': name,
+            'accuracy': acc,
+            'precision': prec,
+            'recall': rec,
+            'f1': f1,
+            'roc_auc': roc
+        })
 
     df_baseline = pd.DataFrame(metrics)
     df_baseline.to_csv('results/baseline_results.csv', index=False)
@@ -87,7 +98,7 @@ def evaluate_baseline(X_train, X_test, y_train, y_test, preprocessor):
     plt.title('Baseline Models F1-score')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(f"{FIG_DIR}/baseline_f1.png")
+    plt.savefig(f"{FIG_DIR}/baseline_f1.png", dpi=300)
     plt.close()
 
 
@@ -105,7 +116,12 @@ def evaluate_cross_validation(X, y, preprocessor, cv=5):
         print(f"\n[CV] Validando {name} con {cv}-fold CV")
         pipe = Pipeline([('preprocessor', preprocessor), ('model', estimator)])
         scores = cross_val_score(pipe, X, y, cv=kf, scoring='f1', n_jobs=-1)
-        cv_results.append({'model': name, 'mean_f1': scores.mean(), 'std_f1': scores.std()})
+        print(f"> F1 CV: mean={scores.mean():.4f}, std={scores.std():.4f}")
+        cv_results.append({
+            'model': name,
+            'mean_f1': scores.mean(),
+            'std_f1': scores.std()
+        })
 
     df_cv = pd.DataFrame(cv_results)
     df_cv.to_csv('results/cv_results.csv', index=False)
@@ -116,8 +132,9 @@ def evaluate_cross_validation(X, y, preprocessor, cv=5):
     plt.ylabel('F1-score')
     plt.title('Cross-Validation F1-score')
     plt.xticks(rotation=45)
+    plt.grid(axis='y', linestyle='--', alpha=0.5)
     plt.tight_layout()
-    plt.savefig(f"{FIG_DIR}/cv_f1.png")
+    plt.savefig(f"{FIG_DIR}/cv_f1.png", dpi=300)
     plt.close()
 
 
@@ -136,13 +153,27 @@ def evaluate_neural_network(X_train, X_test, y_train, y_test, preprocessor):
 
     best = grid.best_estimator_
     y_pred = best.predict(X_test)
+    y_proba = best.predict_proba(X_test)[:, 1]
 
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred)
+    rec = recall_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
-    df_nn = pd.DataFrame([{'model': 'NeuralNetwork', 'f1': f1}])
+    roc = roc_auc_score(y_test, y_proba)
+    print(f"\n[NN] Mejores parámetros: {grid.best_params_}")
+    print(f"[NN] Accuracy: {acc:.4f}, Precision: {prec:.4f}, Recall: {rec:.4f}, F1: {f1:.4f}, ROC AUC: {roc:.4f}")
+
+    df_nn = pd.DataFrame([{
+        'model': 'NeuralNetwork',
+        'accuracy': acc,
+        'precision': prec,
+        'recall': rec,
+        'f1': f1,
+        'roc_auc': roc
+    }])
     df_nn.to_csv('results/nn_results.csv', index=False)
 
     # Gráfica F1 NN vs GradientBoosting
-    # Leer baseline para comparativa
     df_baseline = pd.read_csv('results/baseline_results.csv')
     gb_f1 = df_baseline.loc[df_baseline['model']=='GradientBoosting','f1'].values[0]
 
@@ -151,7 +182,7 @@ def evaluate_neural_network(X_train, X_test, y_train, y_test, preprocessor):
     plt.ylabel('F1-score')
     plt.title('Comparación F1: GB vs NN')
     plt.tight_layout()
-    plt.savefig(f"{FIG_DIR}/nn_vs_gb_f1.png")
+    plt.savefig(f"{FIG_DIR}/nn_vs_gb_f1.png", dpi=300)
     plt.close()
 
 
