@@ -1,0 +1,5 @@
+model,f1
+LogisticRegression,0.8835472302083642
+DecisionTree,0.8188188846849811
+RandomForest,0.8916250225781203
+GradientBoosting,0.8962148962148963
